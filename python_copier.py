@@ -422,8 +422,8 @@ your_portfolio = json.loads(cfYour.get_accounts())
 your_portfolio_value = your_portfolio['accounts']['flex']['portfolioValue']
 print('your_portfolio_value:', your_portfolio_value, 'USD\n')
 
-if your_portfolio_value <= 200:  # stop if your account is almost empty (which would cause strategy to become irregular)
-    raise ValueError('Your account has < 200 USD value, causing strategy to become irregular or unreliable.')
+if your_portfolio_value <= 500:  # stop if your account is almost empty (which would cause strategy to become irregular)
+    raise ValueError('Your account has < 500 USD value, causing strategy to become irregular or unreliable.')
 elif your_portfolio_value >= 110000:  # stop if your account is way too large
     raise ValueError('Your account has > 110000 USD value, you should join our fund.')
 
@@ -436,8 +436,8 @@ your_positions = json.loads(cfYour.get_openpositions())['openPositions']
 tickers = json.loads(cfPublic.get_tickers())['tickers']
 
 # adjust your portfolio to resemble source portfolio.
-if source_portfolio_value <= 200:  # avoid division by zero, and also stop if source account is almost empty (which would cause strategy to become irregular)
-    raise ValueError('Source account has < 200 USD value, causing strategy to become irregular or unreliable.')    
+if source_portfolio_value <= 500:  # avoid division by zero, and also stop if source account is almost empty (which would cause strategy to become irregular)
+    raise ValueError('SOURCE account has < 500 USD value, causing strategy to become irregular or unreliable.')    
 else:
     pfratio = your_portfolio_value / source_portfolio_value
   
