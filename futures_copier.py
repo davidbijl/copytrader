@@ -37,6 +37,7 @@ import json
 import urllib.request as urllib2
 import urllib.parse as urllib
 import ssl
+import math
 
 class cfApiMethods(object):
     def __init__(self, apiPath, apiPublicKey="", apiPrivateKey="", timeout=10, checkCertificate=True, useNonce=False):
@@ -453,11 +454,19 @@ else:
             position_adjustment = round( -1 * your_pos['size'], contractValueTradePrecision )  # avoid "sendStatus":{"status":"invalidSize"} issue    
             if abs( position_adjustment ) > 0:
                 markPrice = [ t['markPrice'] for t in tickers if t['symbol'] == s ][0]
-                limit_order = { "orderType": "lmt", "symbol": s
-                    , "side": ( 'buy' if position_adjustment > 0 else 'sell' )
-                    , "size": abs( position_adjustment )
-                    , "limitPrice": round( markPrice, contractValueTradePrecision )  # avoid "sendStatus":{"status":"invalidPrice"} issue
-                    , "reduceOnly": "true"
+                # price must have correct precision (different from contractValueTradePrecision) avoid "sendStatus":{"status":"invalidPrice"} issue
+                tickSize = [ i['tickSize'] for i in instruments if i['symbol'] == s ][0]
+                if position_adjustment > 0:
+                    limitPrice = math.ceil( markPrice / tickSize ) * tickSize
+                else:
+                    limitPrice = math.floor( markPrice / tickSize ) * tickSize
+                limit_order = { 
+                  "orderType": "lmt"      # simple Limit order, don't mess with post-only
+                  , "symbol": s
+                  , "side": ( 'buy' if position_adjustment > 0 else 'sell' )
+                  , "size": abs( position_adjustment )
+                  , "limitPrice": limitPrice
+                  , "reduceOnly": "true"
                 }
                 result = cfYour.send_order_1(limit_order)
                 print("closing position:\n", limit_order, '\n', result)
@@ -479,14 +488,21 @@ else:
         #print( 'position_adjustment', position_adjustment )
         if abs( position_adjustment ) > 0:
             markPrice = [ t['markPrice'] for t in tickers if t['symbol'] == s ][0]
-            limit_order = { "orderType": "lmt", "symbol": s
-                  , "side": ( 'buy' if position_adjustment > 0 else 'sell' )
-                  , "size": abs( position_adjustment )
-                  , "limitPrice": round( markPrice, contractValueTradePrecision )  # avoid "sendStatus":{"status":"invalidPrice"} issue
+            # price must have correct precision (different from contractValueTradePrecision) avoid "sendStatus":{"status":"invalidPrice"} issue
+            tickSize = [ i['tickSize'] for i in instruments if i['symbol'] == s ][0]
+            if position_adjustment > 0:
+                limitPrice = math.ceil( markPrice / tickSize ) * tickSize
+            else:
+                limitPrice = math.floor( markPrice / tickSize ) * tickSize
+            limit_order = { 
+              "orderType": "lmt" # simple Limit order, don't mess with post-only
+              , "symbol": s
+              , "side": ( 'buy' if position_adjustment > 0 else 'sell' )
+              , "size": abs( position_adjustment )
+              , "limitPrice": limitPrice
             }
             result = cfYour.send_order_1(limit_order)
             print("sent order:\n", limit_order, '\n', result)
         #print('\n')
-
 
 
